@@ -13,7 +13,7 @@ namespace CosmosDB_Example.BusinessLogic
 		private static readonly string EndpointUri = "https://localhost:8081";
 
 		// The primary key for the Azure Cosmos account.
-		private static readonly string PrimaryKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+		private static readonly string PrimaryKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/!Jw!=";
 
 		// The Cosmos client instance
 		private CosmosClient cosmosClient;
