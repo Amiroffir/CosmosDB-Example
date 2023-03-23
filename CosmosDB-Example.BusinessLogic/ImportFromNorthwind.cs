@@ -50,7 +50,7 @@ namespace CosmosDB_Example.BusinessLogic
 				p.SupplierID = (int)reader["SupplierID"];
 				p.CategoryID = (int)reader["CategoryID"];
 				p.QuantityPerUnit = (string)reader["QuantityPerUnit"];
-				//p.UnitPrice = (SqlMoney)reader["UnitPrice"];
+				p.UnitPrice = (decimal)reader["UnitPrice"];
 				//p.UnitsInStock = (int)reader["UnitsInStock"];
 				//p.UnitsOnOrder = (int)reader["UnitsOnOrder"];
 				//p.ReorderLevel = (int)reader["ReorderLevel"];

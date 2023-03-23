@@ -2,11 +2,13 @@
 using Microsoft.Azure.Cosmos;
 using System.Drawing;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace CosmosDB_Example.BusinessLogic
 {
 	public class CosmosOperations
 	{
+
 		// The Azure Cosmos DB endpoint for running this sample.
 		private static readonly string EndpointUri = "https://localhost:8081";
 
@@ -29,10 +31,7 @@ namespace CosmosDB_Example.BusinessLogic
 		public async Task InsertProductsToCosmos()
 		{
 			// Create a new instance of the Cosmos Client
-			this.cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, new CosmosClientOptions() { ApplicationName = "Cosmos-Example" });
-			products = (List<Product>)ImportFromNorthwind.RunCommandResult("SELECT * FROM Products");
-			await this.CreateDatabaseAsync();
-			await this.CreateContainerAsync();
+			DBConnect();
 			await this.AddItemsToContainerAsync();
 		}
 
@@ -72,7 +71,7 @@ namespace CosmosDB_Example.BusinessLogic
 				try
 				{
 					// Read the item to see if it exists.  
-					ItemResponse<Product> productResponse = await this.container.ReadItemAsync<Product>(product.ProductName+product.ProductID, new PartitionKey(product.ProductName));
+					ItemResponse<Product> productResponse = await this.container.ReadItemAsync<Product>(product.ProductName + product.ProductID, new PartitionKey(product.ProductName));
 					Console.WriteLine("Item in database with id: {0} already exists\n", productResponse.Resource.ProductID);
 				}
 				catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -90,5 +89,82 @@ namespace CosmosDB_Example.BusinessLogic
 			}
 		}
 		// </AddItemsToContainerAsync>	
+
+		// <QueryItemsAsync>
+		/// <summary>
+		/// Run a query (using Azure Cosmos DB SQL syntax) against the container
+		/// Including the partition key value of lastName in the WHERE filter results in a more efficient query
+		/// </summary>
+		public async Task<List<Product>> FilterProductsById(string sid)
+		{
+			await DBConnect();
+			var sqlQueryText = "SELECT * from c WHERE c.SupplierID = " + sid + "";
+
+			QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+
+			FeedIterator<Product> queryResultSetIterator = this.container.GetItemQueryIterator<Product>(queryDefinition);
+
+			List<Product> products = new List<Product>();
+
+			while (queryResultSetIterator.HasMoreResults)
+			{
+				FeedResponse<Product> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+				foreach (Product p in currentResultSet)
+				{
+					products.Add(p);
+				}
+			}
+			return products;
+		}
+
+		public async Task<List<Product>> FilterProductsByPrice(string price)
+		{
+			await DBConnect();
+			var sqlQueryText = "SELECT* FROM c WHERE c.UnitPrice < " + price + "";
+
+			QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+			FeedIterator<Product> queryResultSetIterator = this.container.GetItemQueryIterator<Product>(queryDefinition);
+
+			List<Product> products = new List<Product>();
+
+			while (queryResultSetIterator.HasMoreResults)
+			{
+				FeedResponse<Product> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+				foreach (Product p in currentResultSet)
+				{
+					products.Add(p);
+				}
+			}
+			return products;
+		}
+
+		public async Task<List<Product>> FilterProductsByName(string name)
+		{
+			await DBConnect();
+			var sqlQueryText = "SELECT * FROM c WHERE STARTSWITH(c.ProductName, '" + name + "')";
+
+			QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+
+			FeedIterator<Product> queryResultSetIterator = this.container.GetItemQueryIterator<Product>(queryDefinition);
+
+			List<Product> products = new List<Product>();
+
+			while (queryResultSetIterator.HasMoreResults)
+			{
+				FeedResponse<Product> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+				foreach (Product p in currentResultSet)
+				{
+					products.Add(p);
+				}
+			}
+			return products;
+		}
+
+		private async Task DBConnect()
+		{
+			this.cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, new CosmosClientOptions() { ApplicationName = "Cosmos-Example" });
+			await this.CreateDatabaseAsync();
+			await this.CreateContainerAsync();
+		}
 	}
 }
